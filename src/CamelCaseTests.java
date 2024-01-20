@@ -52,9 +52,9 @@ class CamelCaseTests {
 	void numericIndexTest() {
 		ArrayList<Integer> answer = new ArrayList<Integer>();
 		answer.add(5);
-		assertEquals(answer, camel.getNumericIndex("asdfj7"));
+		assertEquals(answer, camel.getNumericIndexes("asdfj7"));
 		answer.add(9);
-		assertEquals(answer, camel.getNumericIndex("asdfg7jio7"));
+		assertEquals(answer, camel.getNumericIndexes("asdfg7jio7"));
 	}
 	
 	@Test
@@ -65,9 +65,22 @@ class CamelCaseTests {
 		assertEquals(answer, camel.splitStringOnUpperCase("firstSecond"));
 	}
 	
-//	@Test
-//	void splitOnUpperCaseTest() {
-//		assertEquals("last", camel.splitOnUpperCase("testLast"));
-//	}
+	@Test
+	void splitStringOnNumericTest() {
+		ArrayList<String> answer = new ArrayList<String>();
+		answer.add("first");
+		answer.add("9");
+		assertEquals(answer, camel.splitStringOnNumeric("First9"));
+	}
+	
+	@Test 
+	void splitStringOnMultipleUpperCaseTest() {
+		ArrayList<String> answer = new ArrayList<String>();
+		answer.add("first");
+		answer.add("second");
+		answer.add("third");
+		assertEquals(answer, camel.splitStringOnUpperCase("firstSecondThird"));
+		assertEquals(answer, camel.splitStringOnUpperCase("FirstSecondThird"));
+	}
 
 }
