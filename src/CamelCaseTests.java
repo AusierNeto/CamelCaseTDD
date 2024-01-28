@@ -1,8 +1,8 @@
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,10 +51,10 @@ class CamelCaseTests {
 	
 	@Test
 	void numericIndexTest() {
-		ArrayList<NumericString> answer = new ArrayList<NumericString>();
-		answer.add(new NumericString(5,1));
+		ArrayList<SplitElement> answer = new ArrayList<SplitElement>();
+		answer.add(new SplitElement(5,1));
 		assertEquals(answer.get(0).toString(), camel.getNumericIndexes("asdfj7").get(0).toString());
-		answer.add(new NumericString(9,2));
+		answer.add(new SplitElement(9,2));
 		assertEquals(answer.toString(), camel.getNumericIndexes("asdfg7jio70").toString());
 	}
 	
@@ -93,7 +93,7 @@ class CamelCaseTests {
 	
 	@Test
 	void processDigitFirstPosition() {
-		assertThrows(StartsWithNumberException.class, () -> camel.processString("10First"));
+		assertThrows(StartsWithNumberException.class, () -> camel.processCamelCase("10First"));
 	}
 	
 	@Test
@@ -102,13 +102,21 @@ class CamelCaseTests {
 		assertEquals("10", camel.getSecondWordNumber("Second10"));
 	}
 	
-//	@Test
-//	void splitStringMultipleDigitNumericTest() {
-//		ArrayList<String> answer = new ArrayList<String>();
-//		answer.add("first");
-//		answer.add("10");
-//		answer.add("last");
-//		assertEquals(answer, camel.splitStringOnNumericUpperCase("First10Last"));
-//	}
+	@Test
+	void getFirstAndSecondWordUpperCaseAndNumeric() { 
+		ArrayList<String> answer = new ArrayList<String>();
+		answer.add("first");
+		answer.add("100");
+		assertEquals(answer.toString(), camel.processCamelCase("First100").toString());
+	}
+	
+	@Test
+	void splitStringThreeWords() {
+		ArrayList<String> answer = new ArrayList<String>();
+		answer.add("first");
+		answer.add("10");
+		answer.add("last");
+		assertEquals(answer, camel.processCamelCase("First10Last"));
+	}
 	
 }

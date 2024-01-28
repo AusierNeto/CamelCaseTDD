@@ -1,10 +1,10 @@
-public class NumericString {
+public class SplitElement {
 
 
     private int startIndex;
     private int size;
 
-    public NumericString(int startIndex, int size) {
+    public SplitElement(int startIndex, int size) {
         this.startIndex = startIndex;
         this.size = size;
     }

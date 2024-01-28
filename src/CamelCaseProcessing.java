@@ -69,11 +69,11 @@ public class CamelCaseProcessing {
 		return numberLength;
 	}
 
-	public ArrayList<NumericString> getNumericIndexes(String stringElement) {
-		ArrayList<NumericString> indexesArray = new ArrayList<NumericString>();
+	public ArrayList<SplitElement> getNumericIndexes(String stringElement) {
+		ArrayList<SplitElement> indexesArray = new ArrayList<SplitElement>();
 		for (int i=0; i<stringElement.length(); i++) {
 			if (Character.isDigit((stringElement.charAt(i)))) {
-				indexesArray.add(new NumericString(i, getNumberLength(stringElement, i)));
+				indexesArray.add(new SplitElement(i, getNumberLength(stringElement, i)));
 				i += indexesArray.get(indexesArray.size()-1).size();
 			}
 		}
@@ -94,7 +94,7 @@ public class CamelCaseProcessing {
 	}
 
 	public ArrayList<String> splitStringOnNumeric(String stringElement) {
-		ArrayList<NumericString> numericCharsArray = getNumericIndexes(stringElement);
+		ArrayList<SplitElement> numericCharsArray = getNumericIndexes(stringElement);
 		ArrayList<String> splittedStringsArray = new ArrayList<String>();
 		
 		splittedStringsArray.add(stringElement.substring(0, numericCharsArray.get(0).index()).toLowerCase());
@@ -103,78 +103,78 @@ public class CamelCaseProcessing {
 		return splittedStringsArray;
 	}
 	
-	private static List<Object> sortList(List<Object> lista) {
-        Collections.sort(lista, new Comparator<Object>() {
-            public int compare(Object o1, Object o2) {
-                if (o1 instanceof NumericString && o2 instanceof NumericString) {
-                    return Integer.compare(((NumericString) o1).index(), ((NumericString) o2).index());
-                } else if (o1 instanceof Integer && o2 instanceof Integer) {
-                    return Integer.compare((Integer) o1, (Integer) o2);
-                } else if (o1 instanceof NumericString && o2 instanceof Integer){
-                	return Integer.compare(((NumericString) o1).index(), (Integer) o2);
-                } else {
-                	return Integer.compare(((NumericString) o2).index(), (Integer) o1);
-                }
-            }
-        });
-        return lista;  // TODO review this function
-    }
-	
-	private List<Object> joinNumericAndUpperCaseLettersArray(ArrayList<NumericString> numericArray, ArrayList<Integer> upperCaseArray) {
+	private List<Object> joinNumericAndUpperCaseLettersArray(ArrayList<SplitElement> numericArray, ArrayList<Integer> upperCaseArray) {
 		ArrayList<Object> unionArray = new ArrayList<Object>(numericArray);
 		unionArray.addAll(upperCaseArray);
 		List<Object> orderedList = unionArray;
 		return orderedList;
 	}
 	
-	private int getNextSplitElementIndex(int index, List<Object> indexesList) {
-		if (index+1 < indexesList.size()) {
+	private int getNextSplitElementIndex(int index, List<Object> indexesList, String stringElement) {
+		try {
 			if (indexesList.get(index + 1).getClass().getName() == "NumericString") {
-				return ((NumericString) indexesList.get(index + 1)).index();
+				return ((SplitElement) indexesList.get(index + 1)).index();
 			} else {
 				return (int) indexesList.get(index+1);
 			}
-		} else if (indexesList.get(index + 1).getClass().getName() == "NumericString") {
-			return ((NumericString) indexesList.get(indexesList.size()-1)).index();
-		} else {
-			return (int) indexesList.get(indexesList.size()-1);
-		}  // TODO Review this function
+		} catch (Exception e) {
+			return stringElement.length();
+		}
 	}
 
 	private int getSplitElementIndex(Object splitElement) {
 		// splitElement can be Integer or NumericString;
-		if (splitElement.getClass().getName() == "NumericString") {
-			return ((NumericString)splitElement).index();
-		} else {
-			return (int)splitElement;
-		} // Either way, the index will be returned;
-		
+		if (splitElement.getClass().getName() == "SplitElement") {
+			return ((SplitElement)splitElement).index();
+		}
+		return (int)splitElement;
+		// Either way, the index will be returned;
 	}
 	
-	public Object getFirstWord(String stringElement) {
+	public String getFirstWord(String stringElement) {
 		String stringToProcess = removeUpperCaseOnFirstLetter(stringElement);
 		ArrayList<Integer> upperCaseIndexes = getUpperCaseIndexes(stringToProcess);
-		ArrayList<NumericString> numericIndexes = getNumericIndexes(stringToProcess);
+		ArrayList<SplitElement> numericIndexes = getNumericIndexes(stringToProcess);
 		Object firstSplitElement = joinNumericAndUpperCaseLettersArray(numericIndexes, upperCaseIndexes).get(0);
 		int index = getSplitElementIndex(firstSplitElement);
 		
 		return stringToProcess.substring(0, index);
 	}
-
-	public void processString(String string) {
-		isStringValid(string);
-	}
 	
-	private String getNumericSubString(NumericString numericElement, String stringElement) {
+	private String getNumericSubString(SplitElement numericElement, String stringElement) {
 		return stringElement.substring(numericElement.index(), numericElement.index() + numericElement.size());
 	}
 
 	public String getSecondWordNumber(String string) {
 		String stringToProcess = removeUpperCaseOnFirstLetter(string);
-		ArrayList<NumericString> upperCaseIndexes = getNumericIndexes(stringToProcess);
-		NumericString firstElement = upperCaseIndexes.get(0);
+		ArrayList<SplitElement> upperCaseIndexes = getNumericIndexes(stringToProcess);
+		SplitElement firstElement = upperCaseIndexes.get(0);
 		return getNumericSubString(firstElement, stringToProcess);
 	}
+	
+	private ArrayList<String> processString(String stringElement, ArrayList<Object> splitElementsArrayList) {
+		ArrayList<String> processedStrings = new ArrayList<String>();
+		processedStrings.add(getFirstWord(stringElement));
+		for (int i=0; i<splitElementsArrayList.size(); i++) {
+			if (splitElementsArrayList.get(i).getClass().getName() == "SplitElement") {
+				processedStrings.add(getNumericSubString((SplitElement)splitElementsArrayList.get(i), stringElement));
+			} else {
+				int sliceEndIndex = getNextSplitElementIndex(i, splitElementsArrayList, stringElement);
+				processedStrings.add(stringElement.substring((int)splitElementsArrayList.get(i), sliceEndIndex).toLowerCase());
+			}
+		}
+		return processedStrings;
+	}
+	
+	public ArrayList<String> processCamelCase(String stringElement) {
+		isStringValid(stringElement);
+		ArrayList<SplitElement> numericIndexesArrayList = getNumericIndexes(stringElement);
+		ArrayList<Integer> upperCaseIndexesArrayList = getUpperCaseIndexes(removeUpperCaseOnFirstLetter(stringElement));
+		ArrayList<Object> splitElementsArrayList = (ArrayList<Object>)joinNumericAndUpperCaseLettersArray(numericIndexesArrayList, upperCaseIndexesArrayList);
+		return processString(stringElement, splitElementsArrayList);
+	}
+	
+	
 }
 
 
